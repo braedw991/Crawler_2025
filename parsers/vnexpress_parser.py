@@ -69,13 +69,22 @@ def parse_article(url: str) -> dict:
         raw_time = time_tag.get_text(strip=True)
         created_at = parse_created_at(raw_time)
 
-    # 5. Ảnh minh họa đầu tiên
+    # 5. Thumbnail image
     image_url = None
-    for img_tag in soup.select("div.fig-picture img, div.thumb-art img, figure.tpl-caption img"):
-        extracted_url = extract_image_url(img_tag)
-        if extracted_url:
-            image_url = extracted_url
-            break
+    # 5a. Ưu tiên og:image
+    og = soup.select_one('meta[property="og:image"]')
+    if og and og.get('content'):
+        image_url = og['content']
+    else:
+        # 5b. fallback thumbnail (nếu parse chung với listing)
+        thumb = soup.select_one('div.thumb-art picture img')
+        if thumb and thumb.get('src'):
+            image_url = thumb['src']
+        else:
+            # 5c. fallback lấy ảnh đầu tiên trong nội dung bài
+            content_img = soup.select_one('article.fck_detail img')
+            if content_img and content_img.get('src'):
+                image_url = content_img['src']
 
     return {
         "url": url,

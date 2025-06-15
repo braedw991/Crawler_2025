@@ -40,6 +40,14 @@ def crawl_latest_articles(limit: int = None):
     for idx, url in enumerate(urls, start=1):
         print(f"👉 ({idx}/{len(urls)}) {url}")
         article = parse_article(url)
+        if not article:
+            print("❌ Lỗi parse, bỏ qua\n")
+            continue
+
+        # In ra URL ảnh thumbnail (nếu có)
+        thumb = article.get('thumbnail') or 'Không có'
+        print(f"🏞️ Ảnh thumbnail: {thumb}")
+
         if article:
             if add_article(article):
                 print(f"✅ Lưu bài mới: {article['title']}")
