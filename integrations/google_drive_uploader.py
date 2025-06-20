@@ -1,23 +1,31 @@
 # filepath: d:\Python\Crawler_2025final\Crawler_2025\integrations\google_drive_uploader.py
 import os
+import json
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-# Đường dẫn tới file credentials và các quyền cần thiết
-SERVICE_ACCOUNT_FILE = 'config/gold-cocoa-460316-p9-b467244cdbc8.json'
 SCOPES = ['https://www.googleapis.com/auth/drive']
+
+def get_credentials():
+    """Lấy credentials từ biến môi trường."""
+    creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
+    if not creds_json_str:
+        print("❌ Lỗi: Biến môi trường GOOGLE_CREDENTIALS_JSON chưa được thiết lập.")
+        return None
+    
+    creds_info = json.loads(creds_json_str)
+    return service_account.Credentials.from_service_account_info(creds_info, scopes=SCOPES)
 
 def upload_to_drive(file_path: str, folder_id: str):
     """
     Tải một file lên thư mục cụ thể trên Google Drive.
     """
     try:
-        # Xác thực
-        creds = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-        
-        # Tạo service client
+        creds = get_credentials()
+        if not creds:
+            return None
+
         service = build('drive', 'v3', credentials=creds)
         
         file_name = os.path.basename(file_path)
@@ -38,9 +46,8 @@ def upload_to_drive(file_path: str, folder_id: str):
         print(f"✅ Tải lên thành công! File ID: {file.get('id')}")
         return file.get('id')
 
-    except FileNotFoundError:
-        print(f"❌ Lỗi: Không tìm thấy file credentials tại '{SERVICE_ACCOUNT_FILE}'")
     except Exception as e:
+        # Bắt tất cả các lỗi khác, bao gồm cả lỗi API từ Google
         print(f"❌ Đã xảy ra lỗi khi tải file lên Google Drive: {e}")
     
     return None

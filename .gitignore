@@ -10,6 +10,7 @@ config/gold-cocoa-460316-p9-b467244cdbc8.json
 # Thư mục cache của Python
 __pycache__/
 *.pyc
+*.pkl
 
 
 # --- Generated data & Logs ---
