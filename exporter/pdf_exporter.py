@@ -99,7 +99,12 @@ class PDFNews(FPDF):
         self.cell(width, height, text, 0, 0, "C", link=url)
         self.set_text_color(*COLOR_TEXT)
 
-def export_pdf(file_path="data/tin_nong.pdf", limit=None):
+def export_pdf(file_path=None, limit=None):
+    if file_path is None:
+        # Nếu không có đường dẫn, tạo tên file mặc định theo ngày
+        today_str = datetime.now().strftime("%d%m%Y")
+        file_path = f"data/tin_nong_{today_str}.pdf"
+
     articles = load_articles()
     articles = sorted(articles, key=lambda x: x.get("created_at", ""), reverse=True)
     if limit:
@@ -185,9 +190,11 @@ def export_pdf(file_path="data/tin_nong.pdf", limit=None):
 
     # Thử build & xuất bình thường
     pdf = build_pdf(strip_unicode=False)
+    final_file_path = None  # Biến để lưu đường dẫn file cuối cùng
     try:
         pdf.output(file_path)
         print(f"📄 Đã tạo file PDF: {file_path}")
+        final_file_path = file_path  # Lưu đường dẫn khi thành công
     except UnicodeEncodeError as ue:
         print(f"⚠️ UnicodeEncodeError: {ue}. Thử strip dấu tiếng Việt rồi xuất ASCII.")
         pdf = build_pdf(strip_unicode=True)
@@ -196,6 +203,7 @@ def export_pdf(file_path="data/tin_nong.pdf", limit=None):
         try:
             pdf.output(fallback_path)
             print(f"📄 Đã tạo file PDF fallback (ASCII): {fallback_path}")
+            final_file_path = fallback_path # Lưu đường dẫn khi thành công
         except Exception as e2:
             print(f"❌ Lỗi khi xuất PDF fallback: {e2}")
     except PermissionError:
@@ -207,6 +215,7 @@ def export_pdf(file_path="data/tin_nong.pdf", limit=None):
         try:
             pdf.output(new_file_path)
             print(f"📄 Đã tạo file PDF: {new_file_path}")
+            final_file_path = new_file_path # Lưu đường dẫn khi thành công
         except Exception as e3:
             print(f"❌ Lỗi khi xuất file PDF mới: {e3}")
 
@@ -214,6 +223,11 @@ def export_pdf(file_path="data/tin_nong.pdf", limit=None):
     shutil.rmtree(TEMP_DIR, ignore_errors=True)
     print(f"🧹 Đã xoá thư mục tạm: {TEMP_DIR}")
 
+    return final_file_path # Trả về đường dẫn file đã tạo, hoặc None nếu lỗi
+
 # Nếu chạy trực tiếp
 if __name__ == "__main__":
-    export_pdf("data/tin_nong.pdf", limit=5)
+    # Tạo tên file động khi chạy trực tiếp file này
+    today_str = datetime.now().strftime("%d%m%Y")
+    default_filename = f"data/tin_nong_{today_str}.pdf"
+    export_pdf(default_filename, limit=5)
