@@ -19,9 +19,9 @@ def fetch_soup(url: str, referer: str = None) -> BeautifulSoup:
             
             print(f"🚀 Playwright đang mở trang: {url}")
             
-            # Đi đến trang, chờ cho đến khi mạng không còn hoạt động (tức là đã tải xong)
-            # Thêm 'referer' vào đây để giả lập hành vi người dùng
-            page.goto(url, wait_until="networkidle", timeout=30000, referer=referer)
+            # Đi đến trang, chờ cho đến khi nội dung HTML được tải (thay vì chờ mạng yên tĩnh)
+            # Tăng timeout lên 60 giây để an toàn hơn
+            page.goto(url, wait_until="domcontentloaded", timeout=60000, referer=referer)
             
             # Chờ thêm một chút để đảm bảo các script cuối cùng đã chạy
             time.sleep(random.uniform(1, 2))
